@@ -38,7 +38,6 @@ const remove = () => {
 
 const updateInputOnSelect = (selectedName) => {
   [selectedLast.value, selectedFirst.value] = selectedName.split(', ')
-  selected.value = selectedName
 }
 
 </script>
@@ -48,7 +47,12 @@ const updateInputOnSelect = (selectedName) => {
       <input placeholder="Filter prefix" v-model="filterText">
     </div>
 
-    <select size="5" @change="(event) => updateInputOnSelect(event.target.value)">
+    <select
+      size="5"
+      autofocus=false
+      v-model="selected"
+      @change="(event) => updateInputOnSelect(event.target.value)"
+    >
       <option v-for="name in filteredNames">
         {{ name }}
       </option>
