@@ -21,6 +21,7 @@ const numList = ref([
 const virtualizedList = ref([])
 const scrollContainerRef = useTemplateRef('scrollContainer')
 const itemHeight = 24
+const safeRow = 1
 
 onMounted(() => {
   handleScroll(0)
@@ -40,15 +41,15 @@ const virtualContainerStyle = computed(() => {
 
 const handleScroll = (visibleTop) => {
   const visibleBottom = visibleTop + scrollContainerRef.value.clientHeight
-  const startIndex = Math.max(Math.floor(visibleTop / itemHeight) , 0)
-  const endIndex = Math.ceil(visibleBottom / itemHeight)
+  const startIndex = Math.max((Math.floor(visibleTop / itemHeight) - safeRow), 0)
+  const endIndex = Math.ceil(visibleBottom / itemHeight) + safeRow
   console.log('startIndex', startIndex, 'endIndex', endIndex, 'visibleTop', visibleTop, 'visibleBottom', visibleBottom)
   virtualizedList.value = numList.value.slice(startIndex, endIndex).map((item, index) => {
     return {
       number: item,
       style: {
-        // position: 'absolute',
-        top: Math.floor(index + startIndex) * itemHeight
+        position: 'absolute',
+        top: `${Math.floor(index + startIndex) * itemHeight}px`
       }
     }
   })
