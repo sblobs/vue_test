@@ -1,96 +1,88 @@
 <script setup>
-import { ref, computed } from 'vue'
-import Button from './components/Button.vue'
+import { ref, computed, useTemplateRef, onMounted } from 'vue'
 
-const filterText = ref("")
-const nameList = ref(["Emil, Hans", "Mustermann, Max", "Tisch, Roman"])
-const selectedFirst = ref("")
-const selectedLast = ref("")
-const selected = ref("")
+const numList = ref([
+  "1",
+  "2",
+  "3",
+  "4",
+  "5",
+  "6",
+  "7",
+  "8",
+  "9",
+  "10",
+  "11",
+  "12",
+  "13",
+  "14",
+  "15"
+])
+const virtualizedList = ref([])
+const scrollContainerRef = useTemplateRef('scrollContainer')
+const itemHeight = 24
 
-const filteredNames = computed(() => {
-  return nameList.value.filter((name) => 
-    name.split(', ')[0].startsWith(filterText.value)
-  )
+onMounted(() => {
+  handleScroll(0)
 })
 
-const resetSelectedFields = () => {
-  selectedFirst.value = ""
-  selectedLast.value = ""
+const calcContainerHeight = () => {
+  const itemCount = numList.value.length
+  return Math.ceil(itemCount) * (itemHeight)
 }
 
-const create = () => {
-  nameList.value.push(selectedLast.value + ", " + selectedFirst.value)
-  resetSelectedFields()
-}
+const virtualContainerStyle = computed(() => {
+  return {
+    position: 'relative',
+    height: `${calcContainerHeight()}px`
+  }
+})
 
-const update = () => {
-  const updateIndex = nameList.value.indexOf(selected.value)
-  nameList.value[updateIndex] = selectedLast.value + ", " + selectedFirst.value
-  selected.value = selectedLast.value + ", " + selectedFirst.value
-}
-
-const remove = () => {
-  const deleteIndex = nameList.value.indexOf(selected.value)
-  nameList.value.splice(deleteIndex, 1)
-  resetSelectedFields()
-}
-
-const updateInputOnSelect = (selectedName) => {
-  [selectedLast.value, selectedFirst.value] = selectedName.split(', ')
+const handleScroll = (visibleTop) => {
+  const visibleBottom = visibleTop + scrollContainerRef.value.clientHeight
+  const startIndex = Math.max(Math.floor(visibleTop / itemHeight) , 0)
+  const endIndex = Math.ceil(visibleBottom / itemHeight)
+  console.log('startIndex', startIndex, 'endIndex', endIndex, 'visibleTop', visibleTop, 'visibleBottom', visibleBottom)
+  virtualizedList.value = numList.value.slice(startIndex, endIndex).map((item, index) => {
+    return {
+      number: item,
+      style: {
+        // position: 'absolute',
+        top: Math.floor(index + startIndex) * itemHeight
+      }
+    }
+  })
+  console.log("virtualized list is", virtualizedList)
 }
 
 </script>
 
 <template>
-    <div>
-      <input placeholder="Filter prefix" v-model="filterText">
-    </div>
-
-    <select
-      size="5"
-      autofocus=false
-      v-model="selected"
-      @change="(event) => updateInputOnSelect(event.target.value)"
+    <div
+      class="list-container"
+      @scroll="(event) => handleScroll(event.currentTarget.scrollTop)"
+      ref="scrollContainer"
     >
-      <option v-for="name in filteredNames">
-        {{ name }}
-      </option>
-    </select>
-
-    <label for="FirstName">
-      Name:
-      <input id="FirstName" v-model="selectedFirst">
-    </label>
-
-    <label for="LastName">
-      Surname:
-      <input id="LastName" v-model="selectedLast">
-    </label>
-
-    <div class="buttons">
-      <Button text="Create" @click="create"/>
-      <Button text="Update" @click="update"/>
-      <Button text="Delete" @click="remove"/>
+      <div
+        class="virtual-list-container"
+        :style="virtualContainerStyle"
+      >
+        <div
+          v-for="item in virtualizedList"
+          :style="item.style"
+        >
+          {{ item.number }}
+        </div>
+      </div>
     </div>
 </template>
 
 <style scoped>
 
-input {
-  display: block;
-}
-
-select {
-  margin: 10px 15px 0px 0px;
-  width: 200px;
-  float: left;
-}
-
-.buttons {
-  display: flex;
-  gap: 5px;
-  margin-top: 20px;
+.list-container {
+  height: 90px;
+  overflow: auto;
+  border-style: solid;
 }
 
 </style>
